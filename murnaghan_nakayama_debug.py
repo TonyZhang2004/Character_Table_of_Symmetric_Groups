@@ -1,21 +1,21 @@
 # import pandas as pd
 # import matplotlib.pyplot as plt
+from typing import Dict, List, Tuple
 import numpy as np
 from sympy.utilities.iterables import partitions
 
 
-def make_bit_strings(parts: list) -> list[str]:
+def make_bit_strings(parts: List[Dict[int, int]]) -> List[str]:
     bit_strings = []
-    for lambda_ in parts:
+    for part in parts:
         # Iterate through each partition
-        # Make our bit string
         curr_bit_str = ""
         prev = 0
-        lamda_prime = reversed(list(lambda_.keys()))
+        lamda_prime = reversed(list(part.keys()))
         for key in list(lamda_prime):
             for _ in range(key - prev):
                 curr_bit_str += '0'
-            for _ in range(lambda_[key]):
+            for _ in range(part[key]):
                 curr_bit_str += '1'
             prev = key
 
@@ -39,7 +39,7 @@ def validate_bit_string(bit_string: str) -> str:
     return bit_string
 
 
-def get_cycle_lengths(perm: list) -> dict:
+def get_cycle_lengths(perm: str) -> Dict[int, Tuple[int, int]]:
     # key is cycle length and value is starting 0 and ending 1
     cycle_lengths = {}
     curr = 0
@@ -67,7 +67,7 @@ def get_erased_bs(lambda_: str, i: int, j: int) -> str:
     return erased_bs
 
 
-def murnaghan_nakayama(n: int, lambda_: str, sigma: str):
+def murnaghan_nakayama(n: int, lambda_: str, sigma: str) -> int:
     # TODO: I think n is not a required argument, we only care about the partitions
     # lambda_ = string_to_list(lambda_p)
     # sigma = string_to_list(sigma_p)
@@ -125,15 +125,15 @@ def murnaghan_nakayama(n: int, lambda_: str, sigma: str):
     return memo[(n, lambda_, sigma)]
 
 
-def get_character_table(N: int):
-    parts = list(partitions(N))  # Get list of partitions
+def get_character_table(n: int):
+    parts = list(partitions(n))  # Get list of partitions
     bit_strings = make_bit_strings(parts)
     char_table = []
 
     for lambda_ in bit_strings:
         curr_row = []
         for sigma in bit_strings:
-            val = murnaghan_nakayama(N, lambda_, sigma)
+            val = murnaghan_nakayama(n, lambda_, sigma)
             curr_row.append(val)
         char_table.append(curr_row)
 
