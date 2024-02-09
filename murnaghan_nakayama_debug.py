@@ -1,6 +1,7 @@
 # import pandas as pd
 # import matplotlib.pyplot as plt
 from typing import Dict, List, Tuple
+import pickle
 import numpy as np
 from sympy.utilities.iterables import partitions
 
@@ -71,7 +72,7 @@ def murnaghan_nakayama(n: int, lambda_: str, sigma: str) -> int:
     # TODO: I think n is not a required argument, we only care about the partitions
     # lambda_ = string_to_list(lambda_p)
     # sigma = string_to_list(sigma_p)
-
+    global memo
     # Base Cases
     if len(lambda_) == 0 and len(sigma) == 0: # X_0(0) = 1
         return 1
@@ -140,9 +141,24 @@ def get_character_table(n: int):
     return np.fliplr(np.matrix(char_table))
 
 
-memo = {}
+def read_memo_from_file():
+    global memo
+    try:
+        with open("memo.txt", 'rb') as memo_file:
+            memo = pickle.load(memo_file)
+    except IOError:
+        return
+
+
+def write_memo_to_file():
+    with open("memo.txt", 'wb') as memo_file:
+        pickle.dump(memo, memo_file)
+
 
 if __name__ == "__main__":
     N = 3
+    memo = {}
+    read_memo_from_file()
     char_table = get_character_table(N)
+    write_memo_to_file()
     print(char_table)
