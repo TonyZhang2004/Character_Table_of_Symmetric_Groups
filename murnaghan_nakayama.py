@@ -1,7 +1,7 @@
-# import pandas as pd
 # import matplotlib.pyplot as plt
 from typing import Dict, List, Tuple
 import pickle
+import pandas as pd
 import numpy as np
 from sympy.utilities.iterables import partitions
 
@@ -119,11 +119,13 @@ def murnaghan_nakayama(n: int, lambda_: str, sigma: str) -> int:
     return memo[(n, lambda_, sigma)]
 
 
-def get_character_table(n: int):
+def get_character_table(
+    n: int, memo_file_name: str = "memo.txt", csv_file_name: str = ""
+):
     parts = list(partitions(n))  # Get list of partitions
     bit_strings = make_bit_strings(parts)
 
-    read_memo_from_file()
+    read_memo_from_file(memo_file_name)
     char_table = []
 
     for lambda_ in bit_strings:
@@ -133,8 +135,13 @@ def get_character_table(n: int):
             curr_row.append(val)
         char_table.append(curr_row)
 
-    write_memo_to_file()
-    return np.fliplr(np.matrix(char_table))
+    write_memo_to_file(memo_file_name)
+    char_table = np.fliplr(np.array(char_table, dtype=np.int64))
+
+    if csv_file_name:
+        np.savetxt(csv_file_name, char_table, delimiter=",", fmt="%d")
+
+    return char_table
 
 
 def read_memo_from_file(file_name: str = "memo.txt"):
@@ -150,9 +157,10 @@ def write_memo_to_file(file_name: str = "memo.txt"):
     with open(file_name, "wb") as memo_file:
         pickle.dump(memo, memo_file)
 
+
 memo = {}
 
 if __name__ == "__main__":
-    N = 4
-    char_table = get_character_table(N)
+    N = 21
+    char_table = get_character_table(N, csv_file_name="S21.csv")
     print(char_table)
