@@ -142,6 +142,31 @@ def get_character_table(
     return char_table
 
 
+def get_character_value_of_column(
+    n: int, memo_file_name: str = "memo1.txt", csv_file_name: str = "", col_bit_string = ""
+):
+    parts = list(partitions(n))  # Get list of partitions
+    bit_strings = make_bit_strings(parts)
+
+    read_memo_from_file(memo_file_name)
+    char_table = []
+
+    for lambda_ in bit_strings:
+        curr_row = []
+        sigma = col_bit_string
+        val = murnaghan_nakayama(n, lambda_, sigma)
+        curr_row.append(val)
+        char_table.append(curr_row)
+
+    write_memo_to_file(memo_file_name)
+    char_table = np.fliplr(np.array(char_table, dtype=np.int64))
+
+    if csv_file_name:
+        np.savetxt(csv_file_name, char_table, delimiter=",", fmt="%d")
+
+    return char_table
+
+
 def read_memo_from_file(file_name: str = "memo.txt"):
     global memo
     try:
@@ -159,6 +184,11 @@ def write_memo_to_file(file_name: str = "memo.txt"):
 memo = {}
 
 if __name__ == "__main__":
-    N = 21
-    char_table = get_character_table(N, csv_file_name="S21.csv")
-    print(char_table)
+    i = 1
+    N = 1 
+    while True:
+        char_table = get_character_value_of_column(N, csv_file_name=f"S{N}_staircase.csv", col_bit_string="01"*i)
+        print(f"Done for {N}!")
+        i += 1
+        N += i
+

@@ -1,4 +1,4 @@
-memo.txt
+memo*.txt
 *.csv
 
 # Byte-compiled / optimized / DLL files
