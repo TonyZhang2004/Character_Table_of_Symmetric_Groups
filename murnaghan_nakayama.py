@@ -143,7 +143,10 @@ def get_character_table(
 
 
 def get_character_value_of_column(
-    n: int, memo_file_name: str = "memo1.txt", csv_file_name: str = "", col_bit_string = ""
+    n: int,
+    memo_file_name: str = "memo.txt",
+    csv_file_name: str = "",
+    col_bit_string="",
 ):
     parts = list(partitions(n))  # Get list of partitions
     bit_strings = make_bit_strings(parts)
@@ -185,10 +188,11 @@ memo = {}
 
 if __name__ == "__main__":
     i = 1
-    N = 1 
+    N = 1
     while True:
-        char_table = get_character_value_of_column(N, csv_file_name=f"S{N}_staircase.csv", col_bit_string="01"*i)
+        char_table = get_character_value_of_column(
+            N, memo_file_name="memo2.txt", csv_file_name=f"S{N}_square.csv", col_bit_string="01" + ("001" * (i-1))
+        )
         print(f"Done for {N}!")
         i += 1
-        N += i
-
+        N = i**2
