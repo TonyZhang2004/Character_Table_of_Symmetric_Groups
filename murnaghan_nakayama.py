@@ -4,6 +4,9 @@ import numpy as np
 from sympy.utilities.iterables import partitions
 
 
+MEMO = {}
+
+
 def make_bit_strings(parts: List[Dict[int, int]]) -> List[str]:
     bit_strings = []
     for part in parts:
@@ -54,7 +57,7 @@ def get_cycle_lengths(perm: str) -> Dict[int, Tuple[int, int]]:
 
 def get_tau(sigma: str, j: int) -> str:
     # j := idx of 1
-    tau = sigma[:j] + sigma[(j + 1) :]  # just remove the 1
+    tau = sigma[:j] + sigma[(j + 1):]  # just remove the 1
     tau = validate_bit_string(tau)
     return tau
 
@@ -74,15 +77,15 @@ def get_erased_bs(lambda_: str, i: int, j: int) -> str:
 
 def murnaghan_nakayama(n: int, lambda_: str, sigma: str) -> int:
     # TODO: I think n is not a required argument, we only care about the partitions
-    global memo
+    global MEMO
 
     # Base Cases
     if len(lambda_) == 0 and len(sigma) == 0:  # X_0(0) = 1
         return 1
 
     # DP
-    if (n, lambda_, sigma) in memo:
-        return memo[(n, lambda_, sigma)]
+    if (n, lambda_, sigma) in MEMO:
+        return MEMO[(n, lambda_, sigma)]
 
     # Get our hooks
     hooks = [
@@ -94,8 +97,8 @@ def murnaghan_nakayama(n: int, lambda_: str, sigma: str) -> int:
 
     # Invalid diagram -- return 0
     if len(hooks) == 0:
-        memo[(n, lambda_, sigma)] = 0
-        return memo[(n, lambda_, sigma)]
+        MEMO[(n, lambda_, sigma)] = 0
+        return MEMO[(n, lambda_, sigma)]
 
     cycle_lengths = get_cycle_lengths(sigma)
 
@@ -113,8 +116,8 @@ def murnaghan_nakayama(n: int, lambda_: str, sigma: str) -> int:
             temp = ((-1) ** height) * murnaghan_nakayama(n - t, erased_bs, tau)
             mn_sum += temp
 
-    memo[(n, lambda_, sigma)] = mn_sum
-    return memo[(n, lambda_, sigma)]
+    MEMO[(n, lambda_, sigma)] = mn_sum
+    return MEMO[(n, lambda_, sigma)]
 
 
 def get_character_table(
@@ -123,7 +126,8 @@ def get_character_table(
     parts = list(partitions(n))  # Get list of partitions
     bit_strings = make_bit_strings(parts)
 
-    read_memo_from_file(memo_file_name)
+    if memo_file_name:
+        read_memo_from_file(memo_file_name)
     char_table = []
 
     for lambda_ in bit_strings:
@@ -133,7 +137,8 @@ def get_character_table(
             curr_row.append(val)
         char_table.append(curr_row)
 
-    write_memo_to_file(memo_file_name)
+    if memo_file_name:
+        write_memo_to_file(memo_file_name)
     char_table = np.fliplr(np.array(char_table, dtype=np.int64))
 
     if csv_file_name:
@@ -151,7 +156,8 @@ def get_character_value_of_column(
     parts = list(partitions(n))  # Get list of partitions
     bit_strings = make_bit_strings(parts)
 
-    read_memo_from_file(memo_file_name)
+    if memo_file_name:
+        read_memo_from_file(memo_file_name)
     char_table = []
 
     for lambda_ in bit_strings:
@@ -161,7 +167,8 @@ def get_character_value_of_column(
         curr_row.append(val)
         char_table.append(curr_row)
 
-    write_memo_to_file(memo_file_name)
+    if memo_file_name:
+        write_memo_to_file(memo_file_name)
     char_table = np.fliplr(np.array(char_table, dtype=np.int64))
 
     if csv_file_name:
@@ -171,26 +178,25 @@ def get_character_value_of_column(
 
 
 def read_memo_from_file(file_name: str = "memo.txt"):
-    global memo
     try:
         with open(file_name, "rb") as memo_file:
-            memo = pickle.load(memo_file)
+            global MEMO
+            MEMO = pickle.load(memo_file)
     except IOError:
         return
 
 
 def write_memo_to_file(file_name: str = "memo.txt"):
     with open(file_name, "wb") as memo_file:
-        pickle.dump(memo, memo_file)
+        global MEMO
+        pickle.dump(MEMO, memo_file)
 
-
-memo = {}
 
 if __name__ == "__main__":
     i = 1
     N = 1
     while True:
-        char_table = get_character_value_of_column(
+        my_char_table = get_character_value_of_column(
             N, memo_file_name="memo2.txt", csv_file_name=f"S{N}_square.csv", col_bit_string="01" + ("001" * (i-1))
         )
         print(f"Done for {N}!")
