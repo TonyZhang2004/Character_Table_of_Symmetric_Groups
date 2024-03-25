@@ -224,5 +224,5 @@ if __name__ == "__main__":
     N = 78
     i = 12
     get_character_value_of_column(
-        N, f"S{N}_staircase.csv", "memo_staircase.txt", "01" * i
+        N, "01" * i, f"S{N}_staircase.csv", "memo_staircase.txt"
     )
