@@ -111,10 +111,7 @@ def murnaghan_nakayama(lambda_: str, sigma: str) -> int:
         return MEMO[(lambda_, sigma)]
 
     tau = get_tau(sigma)
-    cycle_length_removed = 0
-    for c in sigma:
-        if c == "0":
-            cycle_length_removed += 1
+    cycle_length_removed = sigma.count("0")
 
     mn_sum = 0
     # Loop through our hooks
