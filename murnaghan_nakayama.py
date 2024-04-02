@@ -221,8 +221,9 @@ def write_memo_to_file(file_name: str = "memo.txt"):
 
 
 if __name__ == "__main__":
-    N = 78
-    i = 12
-    get_character_value_of_column(
-        N, "01" * i, f"S{N}_staircase.csv", "memo_staircase.txt"
-    )
+    # N = 78
+    # i = 12
+    # get_character_value_of_column(
+    #     N, "01" * i, f"S{N}_staircase.csv", "memo_staircase.txt"
+    # )
+    get_character_table(15, "S15.csv", "memo_6.txt")
