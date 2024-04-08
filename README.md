@@ -71,6 +71,8 @@ Please read the instructions given at the begining of each code block in our Jup
 
 Download all required files that are mentioned right before the code block from the gdrive link provided [above](#getting-started).
 
+You may also change some parameters as you require. The parameters which you may change are given at the begining of each code block. If you feel comfortable coding and want to modify our code to fit your requirements, you may change other parts of the code as well.
+
 ## Computations
 ### [Frobenius Formula](https://en.wikipedia.org/wiki/Frobenius_formula)
 Given an integer partition $\lambda = \lambda_1 + \lambda_2 + \cdots + \lambda_k$ of $n$, let $\chi^{\lambda}$ be the corresponding irreducible character of $S_n$, and let $\chi^{\lambda}_{\mu}$ be short for the value of $\chi^{\lambda}$ at any $g$ with cycle type $\mu$, denote $l_j  =\lambda_j + k - j$, and $i_j$ the number of times $j$ appears in $\mu$, so $\sum\limits_j i_jj = n$.
