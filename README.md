@@ -13,9 +13,9 @@ This is the repository for Lab of Geometry at Michigan (LoG(M): MATH 440) for th
 ## Getting Started
 Clone the repository on your laptop.
 
-Gdrive link: [Click Here](https://drive.google.com/drive/folders/1J1zih494ypp2f18tC5mQWfqi8FodiMLS)  
+Download all necessary files from the link below. Each function's description has the list of necessary files. Please read the [heatmaps and graphs](#heatmaps-and-graphs-char_tablepy) section for more information.
 
-Download all necessary files from the above link. Each function's description has the list of necessary files. Please read the [heatmaps and graphs](#heatmaps-and-graphs-char_tablepy) section for more information.
+Gdrive link: [Click Here](https://drive.google.com/drive/folders/1J1zih494ypp2f18tC5mQWfqi8FodiMLS)  
 
 ## Examples
 The following examples demonstrate running some of our functions to copmute the character tables.
@@ -64,7 +64,7 @@ Download all required files that are mentioned right before the code block from 
 ### [Frobenius Formula](https://en.wikipedia.org/wiki/Frobenius_formula)
 Given an integer partition $\lambda = \lambda_1 + \lambda_2 + \cdots + \lambda_k$ of $n$, let $\chi^{\lambda}$ be the corresponding irreducible character of $S_n$, and let $\chi^{\lambda}_{\mu}$ be short for the value of $\chi^{\lambda}$ at any $g$ with cycle type $\mu$, denote $l_j  =\lambda_j + k - j$, and $i_j$ the number of times $j$ appears in $\mu$, so $\sum\limits_j i_jj = n$.
 
-Then we have the following Frobenius's Formula: $\chi^{\lambda}_{\mu} = \text{coeff. of }x_{1}^{l_1} x_{2}^{l_2}\cdots x_{k}^{l_k}$ in $\Delta(x) P_{\mu}(x)$ 
+Then we have the following Frobenius's Formula: $ \chi^{\lambda}_{\mu} = \text{coeff. of } x_{1}^{l_1} x_{2}^{l_2}\cdots x_{k}^{l_k}$ in $\Delta(x) P_{\mu}(x)$ 
 
 , where $\Delta(x) = \prod\limits_{1 \leq i < j \leq k} (x_i-x_j)$ is the anti-symmetrizer and $P_\mu(x) = \prod\limits_j P_j(x_1,\cdots, x_k)^{i_j}$, where $P_j(x_1,\cdots, x_k) = x_1^j + \cdots + x_k^j$ is the $j$-th sum.
 

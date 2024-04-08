@@ -91,8 +91,8 @@ def murnaghan_nakayama(lambda_: str, sigma: str) -> int:
     # Base Cases
     if len(lambda_) == 0 and len(sigma) == 0:  # X^0(0) = 1
         return 1
-    if len(lambda_) == 1 and len(sigma) == 1:  # X^1(1) = 1
-        return 1
+    # if len(lambda_) == 1 and len(sigma) == 1:  # X^1(1) = 1
+    #     return 1
 
     # DP
     if (lambda_, sigma) in MEMO:
@@ -226,4 +226,4 @@ if __name__ == "__main__":
     # get_character_value_of_column(
     #     N, "01" * i, f"S{N}_staircase.csv", "memo_staircase.txt"
     # )
-    get_character_table(15, "S15.csv", "memo_6.txt")
+    get_character_table(20, "S20.csv", "memo_6.txt")
