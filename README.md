@@ -51,7 +51,7 @@ import murnaghan_nakayama as mn
 ```
 Note: The above command will only work if your file is in the same working directory as this repository. Please modify the above import statement according to your directory.
 
-To compute the character table and print it, use the following code:
+To compute the character table and print it, you can use the following code:
 ```
 N = 6   # Size of Character Table
 char_table = mn.get_character_table(N)
@@ -64,6 +64,24 @@ N = 6   # Size of Character Table
 col_bit_string = "010101"   # Abaci bit string representation of the column
 char_table = mn.get_character_value_of_column(N, col_bit_string)
 print(char_table)
+```
+
+You can also save the character table in a file as follows:
+```
+N = 6   # Size of Character Table
+character_table = mn.get_character_table(N, output_file_name="S6.csv")
+```
+
+Moreover, you can speed things up for calculating character values of large n if you have already calculated for smaller n by saving it in a memo. 
+As an illustration, suppose you run the followinf code: 
+```
+N = 6   # Size of Character Table
+character_table = mn.get_character_table(N, output_file_name="S6.csv", memo_file_name="memo.txt")
+```
+Now, if we want to calculate $S_{7}$, then we can speed it up by using the same memo as follows:
+```
+N = 7   # Size of Character Table
+character_table = mn.get_character_table(N, output_file_name="S7.csv", memo_file_name="memo.txt")
 ```
 
 ### Heatmaps and Graphs ([char_table.py](char_table.py))
