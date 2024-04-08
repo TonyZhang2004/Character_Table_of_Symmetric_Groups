@@ -11,9 +11,20 @@
 This is the repository for Lab of Geometry at Michigan (LoG(M): MATH 440) for the project Statistics of Character Tables of Symmetric Groups mentored by Prof. Sarah Peluse and Graduate Instructor Karthik Ganapathy. Our group members are Arnav Shah, Atharva Kulkarni, and Tony Zhang.
 
 ## Getting Started
-Clone the repository on your laptop.
+Clone the repository on your laptop using the following command:
+```
+git clone https://github.com/TonyZhang2004/Character_Table_of_Symmetric_Groups.git
+```
+Change your working directory to the folder with our code as follows:
+```
+cd Character_Table_of_Symmetric_Groups
+```
+Install all pip requirements by running the following command:
+```
+pip install -r requirements.txt
+```
 
-Download all necessary files from the link below. Each function's description has the list of necessary files. Please read the [heatmaps and graphs](#heatmaps-and-graphs-char_tablepy) section for more information.
+Download all necessary files from the link below and save it to the working directory. Each function's description has the list of necessary files. Please read the [heatmaps and graphs](#heatmaps-and-graphs-char_tablepy) section for more information.
 
 Gdrive link: [Click Here](https://drive.google.com/drive/folders/1J1zih494ypp2f18tC5mQWfqi8FodiMLS)  
 
