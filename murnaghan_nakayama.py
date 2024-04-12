@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 import pickle
 import numpy as np
 from sympy.utilities.iterables import partitions
@@ -57,7 +57,7 @@ def make_bit_strings(parts: List[Dict[int, int]]) -> List[Tuple[int, int]]:
 
 def reverse_bits(bit_string: Tuple[int, int]) -> int:
     """
-    Returns the number corresponding to the reverse bits 
+    Returns the number corresponding to the reverse bits
     in the bit string
     """
     perm, no_of_bits = bit_string
@@ -167,12 +167,18 @@ def get_erased_bs(lambda_: Tuple[int, int], idx_0: int, idx_1: int) -> Tuple[int
     """
     perm, no_of_bits = lambda_
     # Switch 0 and 1 and fix 0-indexing
-    erased_bs = (perm | (1 << (no_of_bits - idx_0 - 1))) & ~(1 << (no_of_bits - idx_1 - 1))
+    erased_bs = perm | (1 << (no_of_bits - idx_0 - 1))
+    erased_bs = erased_bs & ~(1 << (no_of_bits - idx_1 - 1))    
     erased_bs = validate_bit_string((erased_bs, no_of_bits))
     return erased_bs
 
 
-def murnaghan_nakayama(n: int, lambda_: Tuple[int, int], sigma: Tuple[int, int]) -> int:
+def murnaghan_nakayama(
+    n: int,
+    lambda_: Tuple[int, int],
+    sigma: Tuple[int, int],
+    hooks: List[Tuple[int, int]] = None,
+) -> int:
     """
     Returns the character value corresponding to the partitions
     lambda_ (row) and sigma (column) using the recursive
@@ -187,11 +193,12 @@ def murnaghan_nakayama(n: int, lambda_: Tuple[int, int], sigma: Tuple[int, int])
         return 1
 
     # DP
-    if (lambda_, sigma) in MEMO:
-        return MEMO[(lambda_, sigma)]
+    if (n, lambda_, sigma) in MEMO:
+        return MEMO[(n, lambda_, sigma)]
 
     # Get our hooks
-    hooks = get_hooks(lambda_)
+    if hooks is None:
+        hooks = get_hooks(lambda_)
 
     # Invalid diagram -- return 0
     if len(hooks) == 0:
@@ -208,11 +215,11 @@ def murnaghan_nakayama(n: int, lambda_: Tuple[int, int], sigma: Tuple[int, int])
         if t == max_cycle_length:
             height = get_height(lambda_, i, j)
             erased_bs = get_erased_bs(lambda_, i, j)
-            temp = ((-1) ** height) * murnaghan_nakayama(erased_bs, tau)
+            temp = ((-1) ** height) * murnaghan_nakayama(n - t, erased_bs, tau)
             mn_sum += temp
 
-    MEMO[(lambda_, sigma)] = mn_sum
-    return MEMO[(lambda_, sigma)]
+    MEMO[(n, lambda_, sigma)] = mn_sum
+    return MEMO[(n, lambda_, sigma)]
 
 
 def get_character_table(n: int, csv_file_name: str = "", memo_file_name: str = ""):
@@ -233,17 +240,29 @@ def get_character_table(n: int, csv_file_name: str = "", memo_file_name: str = "
     char_table = []
     for lambda_ in bit_strings:
         curr_row = []
+
+        # Note: we have some duplicate code because we don't want to recompute hooks
+
+        # Get our hooks
+        hooks = get_hooks(lambda_)
+
+        # Invalid diagram -- return 0
+        if len(hooks) == 0:
+            curr_row = [0 for _ in bit_strings]
+            char_table.append(curr_row)
+            continue
+
         for sigma in bit_strings:
-            val = murnaghan_nakayama(lambda_, sigma)
-            curr_row.append(val)
+            curr_row.append(murnaghan_nakayama(n, lambda_, sigma, hooks))
+
         char_table.append(curr_row)
     char_table = np.fliplr(np.array(char_table, dtype=np.int64))
 
     if memo_file_name:
         write_memo_to_file(memo_file_name)
 
-    if output_file_name:
-        np.savetxt(output_file_name, char_table, delimiter=",", fmt="%d")
+    if csv_file_name:
+        np.savetxt(csv_file_name, char_table, delimiter=",", fmt="%d")
 
     return char_table
 
@@ -252,7 +271,7 @@ def get_character_value_of_column(
     n: int, csv_file_name: str = "", col_bit_string="", memo_file_name: str = "memo.txt"
 ):
     """
-    TODO: 
+    TODO:
     Returns the character values for just for a column in Sn
     Parameters:
     n: The number for which character table is copmuted
@@ -271,7 +290,7 @@ def get_character_value_of_column(
     for lambda_ in bit_strings:
         curr_row = []
         sigma = col_bit_string
-        val = murnaghan_nakayama(lambda_, sigma)
+        val = murnaghan_nakayama(n, lambda_, sigma)
         curr_row.append(val)
         char_table.append(curr_row)
     char_table = np.fliplr(np.array(char_table, dtype=np.int64))
