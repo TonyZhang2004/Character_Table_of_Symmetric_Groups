@@ -1,11 +1,25 @@
 from typing import Dict, List, Tuple
 import pickle
-import math
 import numpy as np
 from sympy.utilities.iterables import partitions
 
 
 MEMO = {}
+
+
+def read_memo_from_file(file_name: str = "memo.txt"):
+    try:
+        with open(file_name, "rb") as memo_file:
+            global MEMO
+            MEMO = pickle.load(memo_file)
+    except IOError:
+        return
+
+
+def write_memo_to_file(file_name: str = "memo.txt"):
+    with open(file_name, "wb") as memo_file:
+        global MEMO
+        pickle.dump(MEMO, memo_file)
 
 
 def make_bit_strings(parts: List[Dict[int, int]]) -> List[Tuple[int, int]]:
@@ -33,7 +47,6 @@ def reverse_bits(bit_string: Tuple[int, int]) -> int:
     result = 0
     looped = 0
     while perm > 0:
-        # temp = ((perm & 1) << looped) + temp
         result = (result << 1) + (perm & 1)  # Append digit to end
         perm >>= 1  # Remove that digit
         looped += 1
@@ -174,10 +187,10 @@ def get_character_table(n: int, csv_file_name: str = "", memo_file_name: str = "
             val = murnaghan_nakayama(n, lambda_, sigma)
             curr_row.append(val)
         char_table.append(curr_row)
+    char_table = np.fliplr(np.array(char_table, dtype=np.int64))
 
     if memo_file_name:
         write_memo_to_file(memo_file_name)
-    char_table = np.fliplr(np.array(char_table, dtype=np.int64))
 
     if csv_file_name:
         np.savetxt(csv_file_name, char_table, delimiter=",", fmt="%d")
@@ -193,18 +206,18 @@ def get_character_value_of_column(
 
     if memo_file_name:
         read_memo_from_file(memo_file_name)
-    char_table = []
 
+    char_table = []
     for lambda_ in bit_strings:
         curr_row = []
         sigma = col_bit_string
         val = murnaghan_nakayama(n, lambda_, sigma)
         curr_row.append(val)
         char_table.append(curr_row)
+    char_table = np.fliplr(np.array(char_table, dtype=np.int64))
 
     if memo_file_name:
         write_memo_to_file(memo_file_name)
-    char_table = np.fliplr(np.array(char_table, dtype=np.int64))
 
     if csv_file_name:
         np.savetxt(csv_file_name, char_table, delimiter=",", fmt="%d")
@@ -212,21 +225,6 @@ def get_character_value_of_column(
     return char_table
 
 
-def read_memo_from_file(file_name: str = "memo.txt"):
-    try:
-        with open(file_name, "rb") as memo_file:
-            global MEMO
-            MEMO = pickle.load(memo_file)
-    except IOError:
-        return
-
-
-def write_memo_to_file(file_name: str = "memo.txt"):
-    with open(file_name, "wb") as memo_file:
-        global MEMO
-        pickle.dump(MEMO, memo_file)
-
-
 if __name__ == "__main__":
-    print(get_character_table(8, "S8_new.txt"))
+    print(get_character_table(8, "S8_new.csv"))
     # print(reverse_bits(11, 11))
