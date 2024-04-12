@@ -96,9 +96,12 @@ def validate_bit_string(bit_string: Tuple[int, int]) -> Tuple[int, int]:
     return (perm, no_of_bits)
 
 
-def get_hooks(bit_string: Tuple[int, int]) -> List[Tuple[int, int]]:
+def get_hooks(bit_string: Tuple[int, int]) -> List[Tuple[int, int, int]]:
     """
     Returns all the hooks present in the given bit string's partition.
+    The first entry of the hook tuple has the index of the starting 0
+    from the left, the second entry has the index of the ending 1 from
+    the left, and the third entry is hook height.
     """
     hooks = []
     bit_string_rv = reverse_bits(bit_string)
@@ -108,9 +111,11 @@ def get_hooks(bit_string: Tuple[int, int]) -> List[Tuple[int, int]]:
             idx_1 = idx_0  # idx_1 is relative to idx_0
             bit_string_rv2 = bit_string_rv
             # Iterate through the bit_string again to find the 1's
+            height = 0
             while bit_string_rv2:
                 if bit_string_rv2 % 2 == 1:
-                    hooks.append((idx_0, idx_1))
+                    hooks.append((idx_0, idx_1, height))
+                    height+=1
                 idx_1 += 1
                 bit_string_rv2 >>= 1
         idx_0 += 1
@@ -138,25 +143,6 @@ def get_tau(sigma: Tuple[int, int]) -> Tuple[Tuple[int, int], int]:
         looped += 1
     cycle_len_rem += no_of_bits - looped
     return (tau, cycle_len_rem)
-
-
-def get_height(
-    bit_string: Tuple[int, int], idx_start: int = 0, idx_end: int = -1
-) -> int:
-    """
-    Returns the height of the hook.
-    """
-    perm_rv = reverse_bits(bit_string)
-    perm_rv >>= idx_start  # Remove the first bits till idx_start
-    idx_end -= idx_start
-    height = 0
-    # No. of 1's till idx_end is the height
-    while perm_rv and idx_end != 0:  # We do not count the 1 at index end
-        if perm_rv % 2 == 1:
-            height += 1
-        perm_rv >>= 1
-        idx_end -= 1
-    return height
 
 
 def get_erased_bs(lambda_: Tuple[int, int], idx_0: int, idx_1: int) -> Tuple[int, int]:
@@ -210,10 +196,9 @@ def murnaghan_nakayama(
     mn_sum = 0
     # Loop through our hooks
     for hook in hooks:
-        i, j = hook
+        i, j, height = hook
         t = j - i  # formula for hook length
         if t == max_cycle_length:
-            height = get_height(lambda_, i, j)
             erased_bs = get_erased_bs(lambda_, i, j)
             temp = ((-1) ** height) * murnaghan_nakayama(n - t, erased_bs, tau)
             mn_sum += temp
@@ -241,7 +226,8 @@ def get_character_table(n: int, csv_file_name: str = "", memo_file_name: str = "
     for lambda_ in bit_strings:
         curr_row = []
 
-        # Note: we have some duplicate code because we don't want to recompute hooks
+        # Note: we have duplicated som code because we don't 
+        # want to recompute hooks for the same row (lambda_)
 
         # Get our hooks
         hooks = get_hooks(lambda_)
