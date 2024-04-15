@@ -32,7 +32,7 @@ def make_bit_strings(parts: List[Dict[int, int]]) -> List[Tuple[int, int]]:
     """
     Returns a list of partitions in abaci format bit strings.
     Parameters:
-    parts: List of partitions where each partition is given by
+    - parts: List of partitions where each partition is given by
     a dictionary whose key is the number appearing in the
     partition and the value is the number of times it appears.
     """
@@ -115,7 +115,7 @@ def get_hooks(bit_string: Tuple[int, int]) -> List[Tuple[int, int, int]]:
             while bit_string_rv2:
                 if bit_string_rv2 % 2 == 1:
                     hooks.append((idx_0, idx_1, height))
-                    height+=1
+                    height += 1
                 idx_1 += 1
                 bit_string_rv2 >>= 1
         idx_0 += 1
@@ -154,7 +154,7 @@ def get_erased_bs(lambda_: Tuple[int, int], idx_0: int, idx_1: int) -> Tuple[int
     perm, no_of_bits = lambda_
     # Switch 0 and 1 and fix 0-indexing
     erased_bs = perm | (1 << (no_of_bits - idx_0 - 1))
-    erased_bs = erased_bs & ~(1 << (no_of_bits - idx_1 - 1))    
+    erased_bs = erased_bs & ~(1 << (no_of_bits - idx_1 - 1))
     erased_bs = validate_bit_string((erased_bs, no_of_bits))
     return erased_bs
 
@@ -166,9 +166,25 @@ def murnaghan_nakayama(
     hooks: List[Tuple[int, int]] = None,
 ) -> int:
     """
-    Returns the character value corresponding to the partitions
-    lambda_ (row) and sigma (column) using the recursive
-    Murnaghan-Nakayama Rule.
+    Returns the character value corresponding to the partitions lambda_ (row)
+    and sigma (column) using the recursive Murnaghan-Nakayama Rule.
+    Parameters:
+    - n: The number for which character value is copmuted
+    - lambda_: A tuple where the first entry is the integer corresponding
+    to the bit string of the partition and the second entry is the number
+    of bits in the abaci bit string representation.
+            E.g: For the column of partition (3,1,1) of 5, sigma will be
+    (25, 6) because the bit string represntation is "011001" which is the
+    integer 25 and has length of 6 bits.
+    - sigma: A tuple where the first entry is the integer corresponding
+    to the bit string of the partition and the second entry is the number
+    of bits in the abaci bit string representation.
+            E.g: For the column of partition (3,1,1) of 5, sigma will be
+    (25, 6) because the bit string represntation is "011001" which is the
+    integer 25 and has length of 6 bits.
+    - hooks (Optional): The hooks of the partition lambda_ calculated using
+    the get_hooks() function.
+
     """
     global MEMO
 
@@ -207,14 +223,14 @@ def murnaghan_nakayama(
     return MEMO[(n, lambda_, sigma)]
 
 
-def get_character_table(n: int, csv_file_name: str = "", memo_file_name: str = ""):
+def get_character_table(n: int, output_file_name: str = "", memo_file_name: str = ""):
     """
     Returns the whole character table for n, i.e., the character
     table of Sn
     Parameters:
-    n: The number for which character table is copmuted
-    output_file_name: file to store character table
-    memo_file_name: read/write from existing memo file
+    - n: The number for which character table is copmuted
+    - output_file_name (optional): file to store character table
+    - memo_file_name (optional): read/write from existing memo file
     """
     parts = list(partitions(n))  # Get list of partitions
     bit_strings = make_bit_strings(parts)
@@ -226,7 +242,7 @@ def get_character_table(n: int, csv_file_name: str = "", memo_file_name: str = "
     for lambda_ in bit_strings:
         curr_row = []
 
-        # Note: we have duplicated som code because we don't 
+        # Note: we have duplicated som code because we don't
         # want to recompute hooks for the same row (lambda_)
 
         # Get our hooks
@@ -235,36 +251,37 @@ def get_character_table(n: int, csv_file_name: str = "", memo_file_name: str = "
         # Invalid diagram -- return 0
         if len(hooks) == 0:
             curr_row = [0 for _ in bit_strings]
-            char_table.append(curr_row)
-            continue
-
-        for sigma in bit_strings:
-            curr_row.append(murnaghan_nakayama(n, lambda_, sigma, hooks))
+        else:
+            for sigma in reversed(bit_strings):
+                curr_row.append(murnaghan_nakayama(n, lambda_, sigma, hooks))
 
         char_table.append(curr_row)
-    char_table = np.fliplr(np.array(char_table, dtype=np.int64))
+
+    if output_file_name:
+        np.savetxt(output_file_name, char_table, delimiter=",", fmt="%d")
 
     if memo_file_name:
         write_memo_to_file(memo_file_name)
-
-    if csv_file_name:
-        np.savetxt(csv_file_name, char_table, delimiter=",", fmt="%d")
 
     return char_table
 
 
 def get_character_value_of_column(
-    n: int, csv_file_name: str = "", col_bit_string="", memo_file_name: str = "memo.txt"
+    n: int, sigma: Tuple[int, int], output_file_name: str = "", memo_file_name: str = ""
 ):
     """
-    TODO:
     Returns the character values for just for a column in Sn
     Parameters:
-    n: The number for which character table is copmuted
-    col_bit_string: the abaci bit string value of the column
-    for which the characater values will be computed
-    output_file_name: file to store character table
-    memo_file_name: read/write from existing memo file
+    - n: The number for which character table is copmuted
+    - sigma: A tuple where the first entry is the integer corresponding
+    to the bit string of the partition of the column to caluculate
+    the character values and the second entry is the number of bits in
+    the abaci bit string representation.
+        E.g: For the column of partition (3,1,1) of 5, sigma will be
+    (25, 6) because the bit string represntation is "011001" which is the
+    integer 25 and has length of 6 bits.
+    - output_file_name (optional): file to store character table
+    - memo_file_name (optional): read/write from existing memo file
     """
     parts = list(partitions(n))  # Get list of partitions
     bit_strings = make_bit_strings(parts)
@@ -275,21 +292,38 @@ def get_character_value_of_column(
     char_table = []
     for lambda_ in bit_strings:
         curr_row = []
-        sigma = col_bit_string
-        val = murnaghan_nakayama(n, lambda_, sigma)
-        curr_row.append(val)
+
+        # Note: we have duplicated som code because we don't
+        # want to recompute hooks for the same row (lambda_)
+
+        # Get our hooks
+        hooks = get_hooks(lambda_)
+
+        # Invalid diagram -- return 0
+        if len(hooks) == 0:
+            curr_row.append(0)
+        else:
+            curr_row.append(murnaghan_nakayama(n, lambda_, sigma, hooks))
         char_table.append(curr_row)
-    char_table = np.fliplr(np.array(char_table, dtype=np.int64))
+
+    if output_file_name:
+        np.savetxt(output_file_name, char_table, delimiter=",", fmt="%d")
 
     if memo_file_name:
         write_memo_to_file(memo_file_name)
-
-    if csv_file_name:
-        np.savetxt(csv_file_name, char_table, delimiter=",", fmt="%d")
 
     return char_table
 
 
 if __name__ == "__main__":
-    print(get_character_table(8, "S8_new.csv"))
-    # print(reverse_bits(11, 11))
+    # get_character_table(30, "S30_new.csv", memo_file_name="memo_new.txt")
+    N = 45
+    i = 9
+    perm = 0
+    for _ in range(i):
+        perm <<= 2
+        perm += 1
+    sigma = (perm, i * 2)
+    get_character_value_of_column(
+        N, sigma, f"S{N}_staircase_new.csv", memo_file_name="memo_staircase_new.txt"
+    )
