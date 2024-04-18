@@ -28,31 +28,33 @@ def write_memo_to_file(file_name: str = "memo.txt"):
         pickle.dump(MEMO, memo_file)
 
 
-def make_bit_strings(parts: List[Dict[int, int]]) -> List[Tuple[int, int]]:
+def make_bit_string(partition: Dict[int, int]) -> Tuple[int, int]:
     """
-    Returns a list of partitions in abaci format bit strings.
+    Returns the partition in abaci format bit strings.
     Parameters:
-    - parts: List of partitions where each partition is given by
-    a dictionary whose key is the number appearing in the
-    partition and the value is the number of times it appears.
+    - partition: It is the partition of a number which is given by a 
+    dictionary whose key is the number appearing in the partition 
+    and the value is the number of times it appears.
+        E.g.: The partition (4,4,4,3,3,1) will be denoted as:
+            {
+                4: 3,
+                3: 2,
+                1: 1
+            }
     """
-    bit_strings = []
-    for part in parts:
-        # Iterate through each partition
-        curr_bit_str = 0
-        no_of_bits = 0
-        prev = 0
-        lambda_prime = reversed(list(part.keys()))
-        for key in list(lambda_prime):
-            for _ in range(key - prev):
-                curr_bit_str = curr_bit_str << 1  # Appends a 0
-                no_of_bits += 1
-            for _ in range(part[key]):
-                curr_bit_str = (curr_bit_str << 1) | 1  # Appends a 1
-                no_of_bits += 1
-            prev = key
-        bit_strings.append((curr_bit_str, no_of_bits))
-    return bit_strings
+    curr_bit_str = 0
+    no_of_bits = 0
+    prev = 0
+    partition_sorted = sorted(partition.items())
+    for num, occurrence in partition_sorted:
+        for _ in range(num - prev):
+            curr_bit_str = curr_bit_str << 1  # Appends a 0
+            no_of_bits += 1
+        for _ in range(occurrence):
+            curr_bit_str = (curr_bit_str << 1) + 1  # Appends a 1
+            no_of_bits += 1
+        prev = num
+    return (curr_bit_str, no_of_bits)
 
 
 def reverse_bits(bit_string: Tuple[int, int]) -> int:
@@ -173,7 +175,7 @@ def murnaghan_nakayama(
     - lambda_: A tuple where the first entry is the integer corresponding
     to the bit string of the partition and the second entry is the number
     of bits in the abaci bit string representation.
-            E.g: For the column of partition (3,1,1) of 5, sigma will be
+            E.g: For the column of partition (3,1,1) of 5, lambda_ will be
     (25, 6) because the bit string represntation is "011001" which is the
     integer 25 and has length of 6 bits.
     - sigma: A tuple where the first entry is the integer corresponding
@@ -233,7 +235,7 @@ def get_character_table(n: int, output_file_name: str = "", memo_file_name: str 
     - memo_file_name (optional): read/write from existing memo file
     """
     parts = list(partitions(n))  # Get list of partitions
-    bit_strings = make_bit_strings(parts)
+    bit_strings = [make_bit_string(part) for part in parts]
 
     if memo_file_name:
         read_memo_from_file(memo_file_name)
@@ -267,24 +269,27 @@ def get_character_table(n: int, output_file_name: str = "", memo_file_name: str 
 
 
 def get_character_value_of_column(
-    n: int, sigma: Tuple[int, int], output_file_name: str = "", memo_file_name: str = ""
+    n: int, sigma: Dict[int, int], output_file_name: str = "", memo_file_name: str = ""
 ):
     """
     Returns the character values for just for a column in Sn
     Parameters:
     - n: The number for which character table is copmuted
-    - sigma: A tuple where the first entry is the integer corresponding
-    to the bit string of the partition of the column to caluculate
-    the character values and the second entry is the number of bits in
-    the abaci bit string representation.
-        E.g: For the column of partition (3,1,1) of 5, sigma will be
-    (25, 6) because the bit string represntation is "011001" which is the
-    integer 25 and has length of 6 bits.
+    - sigma: It is the partition of the number n which is given by a 
+    dictionary whose key is the number appearing in the partition 
+    and the value is the number of times it appears.
+        E.g.: The partition (4,4,4,3,3,1) will be denoted as:
+            {
+                4: 3,
+                3: 2,
+                1: 1
+            }
     - output_file_name (optional): file to store character table
     - memo_file_name (optional): read/write from existing memo file
     """
     parts = list(partitions(n))  # Get list of partitions
-    bit_strings = make_bit_strings(parts)
+    bit_strings = [make_bit_string(part) for part in parts]
+    sigma = make_bit_string(sigma)
 
     if memo_file_name:
         read_memo_from_file(memo_file_name)
@@ -318,12 +323,17 @@ def get_character_value_of_column(
 if __name__ == "__main__":
     # get_character_table(30, "S30_new.csv", memo_file_name="memo_new.txt")
     N = 45
-    i = 9
-    perm = 0
-    for _ in range(i):
-        perm <<= 2
-        perm += 1
-    sigma = (perm, i * 2)
+    staircase_partition = {
+        9: 1,
+        8: 1,
+        7: 1,
+        6: 1,
+        5: 1,
+        4: 1,
+        3: 1,
+        2: 1,
+        1: 1,
+    }
     get_character_value_of_column(
-        N, sigma, f"S{N}_staircase_new.csv", memo_file_name="memo_staircase_new.txt"
+        N, staircase_partition, f"S{N}_staircase_new.csv", memo_file_name="memo_staircase_new.txt"
     )
