@@ -5,8 +5,6 @@ import time
 from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Sequence, Set
 
-import murnaghan_nakayama as mn
-
 
 FULL_ORTHOGONALITY_LIMIT = 1000
 MAX_REPORTED_ERRORS = 10
@@ -32,6 +30,40 @@ def partition_dict_to_list(partition: Dict[int, int]) -> List[int]:
     for part in sorted(partition, reverse=True):
         parts.extend([part] * partition[part])
     return parts
+
+
+def partitions(n: int) -> Iterable[Dict[int, int]]:
+    def generate(remaining: int, max_part: int, prefix: List[int]):
+        if remaining == 0:
+            counts = {}
+            for part in sorted(prefix, reverse=True):
+                counts[part] = counts.get(part, 0) + 1
+            yield counts
+            return
+        for part in range(min(remaining, max_part), 0, -1):
+            yield from generate(remaining - part, part, prefix + [part])
+
+    yield from generate(n, n, [])
+
+
+def make_bit_strings(parts: List[Dict[int, int]]) -> List[str]:
+    bit_strings = []
+    for part in parts:
+        curr_bit_str = ""
+        prev = 0
+        lambda_prime = reversed(list(part.keys()))
+        for key in list(lambda_prime):
+            for _ in range(key - prev):
+                curr_bit_str += "0"
+            for _ in range(part[key]):
+                curr_bit_str += "1"
+            prev = key
+        bit_strings.append(curr_bit_str)
+    return bit_strings
+
+
+def get_partition_bit_strings(n: int) -> List[str]:
+    return make_bit_strings(list(partitions(n)))
 
 
 def hook_length_dimension(partition: Dict[int, int]) -> int:
@@ -99,7 +131,7 @@ def read_csv_rows(csv_file: str) -> Iterable[List[str]]:
 
 
 def verify_labels_file(n: int, labels_file: str, table_size: int) -> CheckResult:
-    expected_bit_strings = mn.get_partition_bit_strings(n)
+    expected_bit_strings = get_partition_bit_strings(n)
     expected_rows = [["axis", "index", "bit_string"]]
     expected_rows.extend(
         ["row", str(index), bit_string]
@@ -144,11 +176,11 @@ def verify_character_table(
     force: bool = False,
 ) -> VerificationResult:
     start = time.perf_counter()
-    partitions = list(mn.partitions(n))
-    column_partitions = list(reversed(partitions))
-    table_size = len(partitions)
+    row_partitions = list(partitions(n))
+    column_partitions = list(reversed(row_partitions))
+    table_size = len(row_partitions)
     n_factorial = math.factorial(n)
-    dimensions = [hook_length_dimension(partition) for partition in partitions]
+    dimensions = [hook_length_dimension(partition) for partition in row_partitions]
     class_sizes = [
         conjugacy_class_size(partition) for partition in column_partitions
     ]
