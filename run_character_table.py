@@ -20,8 +20,11 @@ def parse_args():
     parser.add_argument(
         "--format",
         choices=("npy", "csv"),
-        default="npy",
-        help="Output format. Use npy for large tables such as S40.",
+        default="csv",
+        help=(
+            "Output format. Use csv for exact large tables; npy stores int64 "
+            "and can overflow for large n such as S40."
+        ),
     )
     parser.add_argument(
         "--max-memo-entries",

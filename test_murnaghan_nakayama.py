@@ -112,6 +112,17 @@ class MurnaghanNakayamaTests(unittest.TestCase):
                 progress = json.load(file)
             self.assertEqual(progress["completed_rows"], expected.shape[0])
 
+    def test_csv_writer_preserves_integers_larger_than_int64(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            output_file = os.path.join(tmp_dir, "large.csv")
+            value = 2**63
+            with open(output_file, "w", newline="") as file:
+                writer = csv.writer(file)
+                writer.writerow([value])
+            with open(output_file, "r") as file:
+                actual = int(next(csv.reader(file))[0])
+            self.assertEqual(actual, value)
+
 
 if __name__ == "__main__":
     unittest.main()
