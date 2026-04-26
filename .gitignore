@@ -2,6 +2,13 @@ memo*.txt
 *.csv
 *.png
 
+# Generated character table runs and VM job artifacts
+runs/
+*.npy
+*.progress.json
+*.nohup.out
+*.pid
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
