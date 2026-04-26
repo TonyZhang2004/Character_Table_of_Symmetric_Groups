@@ -1,9 +1,10 @@
 import argparse
 import csv
 import math
+import sys
 import time
 from dataclasses import dataclass, field
-from typing import Dict, Iterable, List, Sequence, Set
+from typing import Dict, Iterable, List, Optional, Sequence, Set
 
 
 FULL_ORTHOGONALITY_LIMIT = 1000
@@ -23,6 +24,46 @@ class VerificationResult:
     rows_scanned: int
     elapsed_seconds: float
     checks: List[CheckResult]
+
+
+class ProgressReporter:
+    def __init__(self, total_rows: int, interval: int = 100):
+        self.total_rows = total_rows
+        self.interval = interval
+        self.start = time.perf_counter()
+        self.last_length = 0
+        self.last_rows_scanned = -1
+
+    def update(self, rows_scanned: int, force: bool = False) -> None:
+        if self.interval <= 0:
+            return
+        if rows_scanned == self.last_rows_scanned:
+            return
+        if not force and rows_scanned % self.interval != 0:
+            return
+
+        elapsed = time.perf_counter() - self.start
+        percent = 100 * rows_scanned / self.total_rows if self.total_rows else 100
+        rate = rows_scanned / elapsed if elapsed else 0
+        remaining_rows = max(self.total_rows - rows_scanned, 0)
+        eta = remaining_rows / rate if rate else 0
+        bar_width = 30
+        filled = round(bar_width * min(rows_scanned, self.total_rows) / self.total_rows)
+        bar = "#" * filled + "-" * (bar_width - filled)
+        message = (
+            f"Verifying [{bar}] {rows_scanned}/{self.total_rows} "
+            f"({percent:5.1f}%) elapsed={elapsed:.1f}s eta={eta:.1f}s"
+        )
+        padding = " " * max(0, self.last_length - len(message))
+        print(f"\r{message}{padding}", end="", file=sys.stderr, flush=True)
+        self.last_length = len(message)
+        self.last_rows_scanned = rows_scanned
+
+    def finish(self, rows_scanned: int) -> None:
+        if self.interval <= 0:
+            return
+        self.update(rows_scanned, force=True)
+        print(file=sys.stderr, flush=True)
 
 
 def partition_dict_to_list(partition: Dict[int, int]) -> List[int]:
@@ -174,6 +215,7 @@ def verify_character_table(
     sample_rows: int = 20,
     full_orthogonality: bool = False,
     force: bool = False,
+    progress_interval: int = 0,
 ) -> VerificationResult:
     start = time.perf_counter()
     row_partitions = list(partitions(n))
@@ -200,6 +242,9 @@ def verify_character_table(
     full_orthogonality_errors: List[str] = []
     dim_square_sum = 0
     full_rows: List[List[int]] = []
+    progress: Optional[ProgressReporter] = None
+    if progress_interval:
+        progress = ProgressReporter(table_size, progress_interval)
 
     if full_orthogonality and table_size > FULL_ORTHOGONALITY_LIMIT and not force:
         checks.append(
@@ -281,8 +326,14 @@ def verify_character_table(
 
             if full_orthogonality:
                 full_rows.append(row)
+
+            if progress:
+                progress.update(rows_scanned)
     except OSError as exc:
         checks.append(CheckResult("csv file readable", False, [str(exc)]))
+    finally:
+        if progress:
+            progress.finish(rows_scanned)
 
     if rows_scanned < table_size:
         add_error(
@@ -395,6 +446,17 @@ def parse_args():
         action="store_true",
         help="Allow expensive checks beyond default safety limits.",
     )
+    parser.add_argument(
+        "--progress-interval",
+        type=int,
+        default=100,
+        help="Update the stderr progress bar every this many rows. Use 0 to disable.",
+    )
+    parser.add_argument(
+        "--no-progress",
+        action="store_true",
+        help="Disable progress output.",
+    )
     return parser.parse_args()
 
 
@@ -407,6 +469,7 @@ def main() -> int:
         sample_rows=args.sample_rows,
         full_orthogonality=args.full_orthogonality,
         force=args.force,
+        progress_interval=0 if args.no_progress else args.progress_interval,
     )
     print_result(result)
     return 0 if result.passed else 1
