@@ -1,5 +1,6 @@
 import argparse
 import csv
+import gzip
 import math
 import sys
 import time
@@ -167,7 +168,8 @@ def parse_integer_row(raw_row: Sequence[str], row_index: int, errors: List[str])
 
 
 def read_csv_rows(csv_file: str) -> Iterable[List[str]]:
-    with open(csv_file, "r", newline="") as file:
+    opener = gzip.open if str(csv_file).endswith(".gz") else open
+    with opener(csv_file, "rt", newline="") as file:
         yield from csv.reader(file)
 
 

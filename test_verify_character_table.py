@@ -1,4 +1,5 @@
 import csv
+import gzip
 import os
 import tempfile
 import unittest
@@ -31,6 +32,20 @@ class VerifyCharacterTableTests(unittest.TestCase):
                     result.passed,
                     [(check.name, check.details) for check in result.checks],
                 )
+
+    def test_gzip_csv_passes_streaming_checks(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            csv_file = os.path.join(tmp_dir, "S6.csv")
+            gzip_file = os.path.join(tmp_dir, "S6.csv.gz")
+            write_small_table(6, csv_file)
+            with open(csv_file, "rb") as source, gzip.open(gzip_file, "wb") as target:
+                target.write(source.read())
+
+            result = verifier.verify_character_table(6, gzip_file)
+            self.assertTrue(
+                result.passed,
+                [(check.name, check.details) for check in result.checks],
+            )
 
     def test_small_tables_pass_full_orthogonality(self):
         with tempfile.TemporaryDirectory() as tmp_dir:

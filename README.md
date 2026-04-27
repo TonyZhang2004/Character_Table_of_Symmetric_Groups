@@ -2,8 +2,9 @@
 ## Contents
 1. [Introduction](#introduction)
 2. [Getting Started](#getting-started)
-3. [Examples](#examples)
-4. [Computations](#computations)
+3. [Data](#data)
+4. [Examples](#examples)
+5. [Computations](#computations)
 <!-- 5. Results
 6. Conclusion -->
 
@@ -27,6 +28,25 @@ pip install -r requirements.txt
 Download all necessary files from the link below and save it to the working directory. Each function's description has the list of necessary files. Please read the [heatmaps and graphs](#heatmaps-and-graphs-char_tablepy) section for more information.
 
 Gdrive link: [Click Here](https://drive.google.com/drive/folders/1J1zih494ypp2f18tC5mQWfqi8FodiMLS)  
+
+## Data
+The full character table of $S_{40}$ is too large to store directly in this GitHub repository. It is available as a compressed CSV file on Google Drive:
+
+[Download the full $S_{40}$ character table](https://drive.google.com/file/d/1Sj2iSKyuB1fJrenbnWyfEMsBybdw6002/view?usp=sharing)
+
+After downloading, place the file in the repository root as `S40.csv.gz` or decompress it as `S40.csv`. The analysis notebook also checks `runs/S40/S40.csv.gz` and `runs/S40/S40.csv`.
+
+To decompress the file while keeping the compressed copy:
+```
+gunzip -k S40.csv.gz
+```
+
+To verify the downloaded table without loading the full file into memory:
+```
+python3 verify_character_table.py --n 40 --csv-file S40.csv.gz
+```
+
+The verifier streams the CSV data, checks the first column against the hook-length formula, verifies the trivial and sign rows, checks dimension-square normalization, and tests selected row norms.
 
 ## Examples
 The following examples demonstrate running some of our functions to copmute the character tables.
@@ -90,6 +110,19 @@ Please read the instructions given at the begining of each code block in our Jup
 Download all required files that are mentioned right before the code block from the gdrive link provided [above](#getting-started).
 
 You may also change some parameters as you require. The parameters which you may change are given at the begining of each code block. If you feel comfortable coding and want to modify our code to fit your requirements, you may change other parts of the code as well.
+
+### Zero Density Analysis ([zero_density_analysis.ipynb](zero_density_analysis.ipynb))
+The notebook `zero_density_analysis.ipynb` computes the density of zero entries in character tables of $S_n$. It computes small tables directly and streams the full $S_{40}$ CSV or compressed CSV file.
+
+By default, the notebook looks for the full $S_{40}$ data at:
+```
+S40.csv.gz
+S40.csv
+runs/S40/S40.csv.gz
+runs/S40/S40.csv
+```
+
+The output plot has $n$ on the x-axis and the density of zero entries on the y-axis.
 
 ## Computations
 ### [Frobenius Formula](https://en.wikipedia.org/wiki/Frobenius_formula)
