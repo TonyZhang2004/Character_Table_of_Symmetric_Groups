@@ -25,16 +25,14 @@ Install all pip requirements by running the following command:
 pip install -r requirements.txt
 ```
 
-Download all necessary files from the link below and save it to the working directory. Each function's description has the list of necessary files. Please read the [heatmaps and graphs](#heatmaps-and-graphs-char_tablepy) section for more information.
-
-Gdrive link: [Click Here](https://drive.google.com/drive/folders/1J1zih494ypp2f18tC5mQWfqi8FodiMLS)  
+Download the public data files from the Google Drive folder linked in the [Data](#data) section.
 
 ## Data
-The full character table of $S_{40}$ is too large to store directly in this GitHub repository. It is available as a compressed CSV file on Google Drive:
+Full generated character-table data is too large to store directly in this GitHub repository. Public data files are available in this Google Drive folder:
 
-[Download the full $S_{40}$ character table](https://drive.google.com/file/d/1Sj2iSKyuB1fJrenbnWyfEMsBybdw6002/view?usp=sharing)
+[Public character-table data folder](https://drive.google.com/drive/folders/1A_DN63jodrUVwPwOMIMrhuG_VJAzheFu?usp=share_link)
 
-After downloading, place the file in the repository root as `S40.csv.gz` or decompress it as `S40.csv`. The analysis notebook also checks `runs/S40/S40.csv.gz` and `runs/S40/S40.csv`.
+For the full $S_{40}$ table, download the compressed CSV and place it in the repository root as `S40.csv.gz` or decompress it as `S40.csv`. The analysis notebook also checks `runs/S40/S40.csv.gz` and `runs/S40/S40.csv`.
 
 To decompress the file while keeping the compressed copy:
 ```
