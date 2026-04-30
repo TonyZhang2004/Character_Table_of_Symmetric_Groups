@@ -2,6 +2,7 @@ from typing import Dict, Iterable, List, Tuple
 import csv
 import json
 import logging
+import math
 import os
 import pickle
 import time
@@ -84,12 +85,79 @@ def make_bit_strings(parts: List[Dict[int, int]]) -> List[str]:
     return bit_strings
 
 
+def make_bit_string(part: Dict[int, int]) -> str:
+    """
+    Return the abacus bit-string encoding of one partition dictionary.
+    """
+    curr_bit_str = ""
+    prev = 0
+    lambda_prime = reversed(list(part.keys()))
+    for key in list(lambda_prime):
+        for _ in range(key - prev):
+            curr_bit_str += "0"
+        for _ in range(part[key]):
+            curr_bit_str += "1"
+        prev = key
+    return curr_bit_str
+
+
 def get_partition_bit_strings(n: int) -> List[str]:
     """
     Return the abaci bit-string encodings of all partitions of n, in the row
     order used by this module.
     """
     return make_bit_strings(list(partitions(n)))
+
+
+def iter_partition_bit_strings(n: int) -> Iterable[str]:
+    """
+    Stream abacus bit-string encodings of all partitions of n in row order.
+    """
+    for partition in partitions(n):
+        yield make_bit_string(partition)
+
+
+def partition_number(n: int) -> int:
+    """
+    Return the number of integer partitions of n.
+    """
+    if n < 0:
+        raise ValueError("n must be nonnegative")
+    counts = [0] * (n + 1)
+    counts[0] = 1
+    for part in range(1, n + 1):
+        for total in range(part, n + 1):
+            counts[total] += counts[total - part]
+    return counts[n]
+
+
+def staircase_rank_from_n(n: int) -> int:
+    """
+    Return k when n is the triangular number k(k + 1) / 2.
+    """
+    if n <= 0:
+        raise ValueError("n must be a positive triangular number")
+    discriminant_root = math.isqrt(8 * n + 1)
+    if discriminant_root * discriminant_root != 8 * n + 1:
+        raise ValueError(f"n={n} is not triangular")
+    if (discriminant_root - 1) % 2:
+        raise ValueError(f"n={n} is not triangular")
+    return (discriminant_root - 1) // 2
+
+
+def staircase_bit_string(n: int) -> str:
+    """
+    Return the abacus bit string for the staircase partition of n.
+    """
+    return "01" * staircase_rank_from_n(n)
+
+
+def staircase_cycle_lengths(n: int) -> Tuple[int, ...]:
+    """
+    Return the staircase cycle type (k, k - 1, ..., 1) for n = k(k + 1) / 2.
+    """
+    k = staircase_rank_from_n(n)
+    return tuple(range(k, 0, -1))
 
 
 def clear_caches() -> None:
@@ -538,6 +606,106 @@ def get_character_value_of_column(
     return char_table
 
 
+def get_staircase_character_column(n: int, memo_file_name: str = "") -> List[int]:
+    """
+    Return all character values on the staircase conjugacy class for S_n.
+    Here n must be triangular, n = k(k + 1) / 2, and the conjugacy class is
+    (k, k - 1, ..., 1).
+    """
+    cycle_lengths = staircase_cycle_lengths(n)
+
+    if memo_file_name:
+        read_memo_from_file(memo_file_name)
+    values = [
+        murnaghan_nakayama_cycles(lambda_, cycle_lengths)
+        for lambda_ in iter_partition_bit_strings(n)
+    ]
+    if memo_file_name:
+        write_memo_to_file(memo_file_name)
+    return values
+
+
+def write_staircase_character_column_csv(
+    n: int,
+    output_file_name: str,
+    memo_file_name: str = "",
+    checkpoint_interval: int = 0,
+    max_memo_entries: int = 0,
+    progress_file: str = "",
+    resume: bool = True,
+    log_interval: int = 1000,
+) -> None:
+    """
+    Stream the staircase conjugacy-class column of the character table of S_n
+    to a one-column CSV. This avoids building a large NumPy array and preserves
+    exact Python integers.
+    """
+    cycle_lengths = staircase_cycle_lengths(n)
+    progress_file = progress_file or default_progress_file(output_file_name)
+    table_size = partition_number(n)
+    progress = read_progress(progress_file) if resume else {}
+    start_row = 0
+
+    if (
+        resume
+        and os.path.exists(output_file_name)
+        and progress_matches(progress, n, table_size, "staircase_csv")
+    ):
+        start_row = int(progress.get("completed_rows", 0))
+        if start_row >= table_size:
+            LOGGER.info("Staircase column already complete: %s", output_file_name)
+            return
+        LOGGER.info(
+            "Resuming staircase column %s from row %d", output_file_name, start_row
+        )
+    else:
+        progress = make_progress(n, table_size, "staircase_csv", output_file_name, 0)
+        progress["cycle_lengths"] = list(cycle_lengths)
+        write_progress(progress_file, progress)
+        LOGGER.info(
+            "Starting staircase column %s for S_%d with %d rows",
+            output_file_name,
+            n,
+            table_size,
+        )
+
+    if memo_file_name:
+        read_memo_from_file(memo_file_name)
+
+    mode = "a" if start_row else "w"
+    start_time = time.perf_counter()
+    with open(output_file_name, mode, newline="") as csv_file:
+        writer = csv.writer(csv_file)
+        for row_index, lambda_ in enumerate(iter_partition_bit_strings(n)):
+            if row_index < start_row:
+                continue
+            value = murnaghan_nakayama_cycles(lambda_, cycle_lengths)
+            writer.writerow([value])
+            completed_rows = row_index + 1
+            progress["completed_rows"] = completed_rows
+            write_progress(progress_file, progress)
+            enforce_memo_limit(max_memo_entries)
+            if (
+                memo_file_name
+                and checkpoint_interval
+                and completed_rows % checkpoint_interval == 0
+            ):
+                write_memo_to_file(memo_file_name)
+            if log_interval and completed_rows % log_interval == 0:
+                elapsed = time.perf_counter() - start_time
+                LOGGER.info(
+                    "Staircase progress: %d/%d rows complete (%.2f%%), %.1fs elapsed",
+                    completed_rows,
+                    table_size,
+                    100 * completed_rows / table_size,
+                    elapsed,
+                )
+
+    if memo_file_name:
+        write_memo_to_file(memo_file_name)
+    LOGGER.info("Finished staircase column %s", output_file_name)
+
+
 def read_memo_from_file(file_name: str = "memo.txt"):
     """
     Read existing memo file.
@@ -571,8 +739,5 @@ def write_memo_to_file(file_name: str = "memo.txt"):
 
 if __name__ == "__main__":
     # N = 78
-    # i = 12
-    # get_character_value_of_column(
-    #     N, "01" * i, f"S{N}_staircase.csv", "memo_staircase.txt"
-    # )
+    # write_staircase_character_column_csv(N, f"S{N}_staircase.csv")
     get_character_table(20, "S20.csv", "memo_6.txt")

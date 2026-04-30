@@ -84,6 +84,24 @@ char_table = mn.get_character_value_of_column(N, col_bit_string)
 print(char_table)
 ```
 
+For larger staircase columns, use the resumable streaming runner. The value of `N` must be triangular, i.e. `N = k(k + 1) / 2`.
+```
+python3 run_staircase_column.py --n 78 --output-dir runs/staircase
+```
+
+This writes a one-column CSV such as `runs/staircase/S78_staircase.csv` and logs progress without building the full table in memory.
+
+For VM runs larger than 78, use:
+```
+bash run_staircase_on_vm.sh
+```
+
+This defaults to `K=13`, hence `N=91`. To run a larger triangular value, set `K`:
+```
+K=14 bash run_staircase_on_vm.sh  # N = 105
+K=15 bash run_staircase_on_vm.sh  # N = 120
+```
+
 You can also save the character table in a file as follows:
 ```
 N = 6   # Size of Character Table

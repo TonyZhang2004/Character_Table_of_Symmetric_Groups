@@ -123,6 +123,61 @@ class MurnaghanNakayamaTests(unittest.TestCase):
                 actual = int(next(csv.reader(file))[0])
             self.assertEqual(actual, value)
 
+    def test_staircase_helpers_accept_only_triangular_n(self):
+        self.assertEqual(mn.staircase_rank_from_n(1), 1)
+        self.assertEqual(mn.staircase_rank_from_n(6), 3)
+        self.assertEqual(mn.staircase_cycle_lengths(10), (4, 3, 2, 1))
+        self.assertEqual(mn.staircase_bit_string(10), "01010101")
+        with self.assertRaises(ValueError):
+            mn.staircase_rank_from_n(8)
+
+    def test_partition_number_matches_generated_partition_count(self):
+        for n in range(0, 15):
+            self.assertEqual(mn.partition_number(n), len(list(mn.partitions(n))))
+
+    def test_staircase_column_matches_full_table_column(self):
+        for k in range(1, 7):
+            n = k * (k + 1) // 2
+            mn.clear_caches()
+            table = mn.get_character_table(n, memo_file_name="")
+            bit_strings = mn.get_partition_bit_strings(n)
+            column_index = list(reversed(bit_strings)).index(mn.staircase_bit_string(n))
+            expected = table[:, column_index].tolist()
+
+            mn.clear_caches()
+            actual = mn.get_staircase_character_column(n, memo_file_name="")
+            self.assertEqual(actual, expected)
+
+    def test_staircase_csv_writer_resumes_from_progress_file(self):
+        n = 10
+        completed_rows = 7
+        expected = mn.get_staircase_character_column(n, memo_file_name="")
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            output_file = os.path.join(tmp_dir, "S10_staircase.csv")
+            progress_file = mn.default_progress_file(output_file)
+            with open(output_file, "w", newline="") as file:
+                writer = csv.writer(file)
+                for value in expected[:completed_rows]:
+                    writer.writerow([value])
+            mn.write_progress(
+                progress_file,
+                mn.make_progress(
+                    n, len(expected), "staircase_csv", output_file, completed_rows
+                ),
+            )
+
+            mn.clear_caches()
+            mn.write_staircase_character_column_csv(
+                n, output_file, memo_file_name="", log_interval=0
+            )
+
+            with open(output_file, "r", newline="") as file:
+                actual = [int(row[0]) for row in csv.reader(file)]
+            self.assertEqual(actual, expected)
+            with open(progress_file, "r") as file:
+                progress = json.load(file)
+            self.assertEqual(progress["completed_rows"], len(expected))
+
 
 if __name__ == "__main__":
     unittest.main()
